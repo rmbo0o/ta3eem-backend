@@ -16,7 +16,7 @@ const app = express();
 
 // Enhanced CORS configuration
 app.use(cors({
-  origin: 'http://localhost:5173',
+  origin: 'https://ta3eem-frontend.onrender.com',
   credentials: true,
   exposedHeaders: ['Authorization'],
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']
