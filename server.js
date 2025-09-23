@@ -14,6 +14,18 @@ dotenv.config();
 
 const app = express();
 
+const uploadDirs = [
+  path.join(__dirname, 'uploads'),
+  path.join(__dirname, 'uploads/menus'),
+  path.join(__dirname, 'uploads/profiles')
+];
+
+uploadDirs.forEach(dir => {
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+});
+
 // Enhanced CORS configuration
 app.use(cors({
   origin: 'https://ta3eem-frontend.onrender.com',
