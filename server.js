@@ -9,6 +9,7 @@ const ownerRoutes = require('./routes/ownerRoutes'); // or ownerRoutes
 const categoryRoutes= require('./routes/categoryRoutes');
 const FeaturedProfilesRoutes = require('./routes/FeaturedProfilesRoutes');
 const path = require('path');
+const fs = require('fs'); 
 
 dotenv.config();
 
