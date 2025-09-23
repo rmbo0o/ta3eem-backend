@@ -29,7 +29,7 @@ uploadDirs.forEach(dir => {
 
 // Enhanced CORS configuration
 app.use(cors({
-  origin: 'https://ta3eem-frontend.onrender.com',
+  origin: 'https://ta3eem-frontendnew.onrender.com',
   credentials: true,
   exposedHeaders: ['Authorization'],
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']
