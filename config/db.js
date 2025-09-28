@@ -37,4 +37,4 @@ const connectDB = () => {
   });
 };
 
-module.exports = { connectDB, connection ,pool};
+module.exports = { connectDB, pool};
