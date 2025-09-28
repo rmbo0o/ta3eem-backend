@@ -1,4 +1,5 @@
-const mysql = require('mysql2');
+// const mysql = require('mysql2');
+const mysql = require('mysql2/promise');
 const dotenv = require('dotenv');
 
 dotenv.config();
@@ -11,7 +12,7 @@ dotenv.config();
 //   port: process.env.DB_PORT || 3306,
 // });
 
-const mysql = require('mysql2/promise');
+
 
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
