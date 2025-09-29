@@ -1,12 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const { connection } = require('../config/db');
+const { pool } = require('../config/db');
 
-// console.log("Category Routes Loaded");
-
-router.get('/food-items', (req, res) => {
-  // console.log("API Endpoint Hit:", req.query);
-
+// get food items by category
+router.get('/food-items', async (req, res) => {
   let sql = `
     SELECT m.*, c.name AS category_name 
     FROM menus m 
@@ -24,29 +21,24 @@ router.get('/food-items', (req, res) => {
     return res.status(400).json({ message: 'Please provide a category_id or category_name to filter items.' });
   }
 
-  // console.log("Generated SQL Query:", sql);
-  // console.log("Query Parameters:", params);
-
-  connection.query(sql, params, (err, results) => {
-    if (err) {
-      console.error('DB error:', err);
-      return res.status(500).json({ message: 'DB error' });
-    }
-    // console.log("Query Results:", results.length);
+  try {
+    const [results] = await pool.query(sql, params);
     res.json(results);
-  });
+  } catch (err) {
+    console.error('DB error:', err);
+    res.status(500).json({ message: 'DB error' });
+  }
 });
 
-router.get('/', (req, res) => {
-  const sql = `SELECT * FROM categories`;
-
-  connection.query(sql, (err, results) => {
-    if (err) {
-      console.error('DB error:', err);
-      return res.status(500).json({ message: 'Database Error' });
-    }
+// get all categories
+router.get('/', async (req, res) => {
+  try {
+    const [results] = await pool.query('SELECT * FROM categories');
     res.json(results);
-  });
+  } catch (err) {
+    console.error('DB error:', err);
+    res.status(500).json({ message: 'Database Error' });
+  }
 });
 
 module.exports = router;
