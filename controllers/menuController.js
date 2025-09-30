@@ -1,45 +1,34 @@
-const { connection } = require('../config/db');
+const { query } = require('../config/db');
 const path = require('path');
 
 // Add Menu Item
 exports.addMenuItem = async (req, res) => {
   try {
-    console.log('Request Body:', req.body);  // Logs form data
-    console.log('Uploaded File:', req.file);  // Logs the uploaded file
+    const { food_name, description, price, social_media_link, category_id } = req.body;
+    const image_url = req.file ? `/uploads/menus/${req.file.filename}` : '';
 
-    // Get the form data and the uploaded file's path
-    const { food_name, description, price, social_media_link, category_id} = req.body;
-    const image_url = req.file ? `/uploads/menus/${req.file.filename}` : '';  // Get the image path
-
-    // Validate required fields
     if (!food_name || !description || !price) {
       return res.status(400).json({ message: 'Missing required fields' });
     }
 
-    // Insert into the database
-    connection.query(
-      `INSERT INTO menus 
-      (owner_id, food_name, description, price, image_url, social_media_link ,category_id)
-      VALUES (?, ?, ?, ?, ?, ? ,?)`,
-      [req.user.id, food_name, description, price, image_url, social_media_link , category_id],
-      (err, result) => {
-        if (err) {
-          console.error('Error adding menu item:', err);
-          return res.status(500).json({ message: 'Database error' });
-        }
+    const sql = `
+      INSERT INTO menus 
+      (owner_id, food_name, description, price, image_url, social_media_link, category_id)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `;
+    const result = await query(sql, [
+      req.user.id, food_name, description, price, image_url, social_media_link, category_id
+    ]);
 
-        // Return response after successful insertion
-        res.status(201).json({
-          id: result.insertId,
-          food_name,
-          description,
-          price,
-          image_url,
-          social_media_link,
-          category_id
-        });
-      }
-    );
+    res.status(201).json({
+      id: result.insertId,
+      food_name,
+      description,
+      price,
+      image_url,
+      social_media_link,
+      category_id
+    });
   } catch (err) {
     console.error('Error adding menu item:', err);
     res.status(500).json({ message: 'Server error' });
@@ -47,74 +36,62 @@ exports.addMenuItem = async (req, res) => {
 };
 
 // Update Menu Item
-exports.updateMenuItem = (req, res) => {
-  const { id } = req.params;
-  const userId = req.user.id;
-  const { food_name, description, price, social_media_link, category_id } = req.body;
+exports.updateMenuItem = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+    const { food_name, description, price, social_media_link, category_id } = req.body;
 
-  // Validate required fields
-  if (!food_name || !description || !price || !category_id) {
-    return res.status(400).json({ message: 'Missing required fields' });
-  }
-
-  const query = `UPDATE menus SET 
-    food_name = ?, 
-    description = ?, 
-    price = ?, 
-    social_media_link = ?,
-    category_id = ?
-    WHERE id = ? AND owner_id = ?`;
-
-  connection.query(
-    query,
-    [food_name, description, price, social_media_link, category_id, id, userId],
-    (err, results) => {
-      if (err) {
-        console.error('Error updating menu item:', err);
-        return res.status(500).json({ message: 'Database error' });
-      }
-      if (results.affectedRows === 0) {
-        return res.status(404).json({ message: 'Menu item not found or not owned by user' });
-      }
-      res.json({ message: 'Menu item updated successfully' });
+    if (!food_name || !description || !price || !category_id) {
+      return res.status(400).json({ message: 'Missing required fields' });
     }
-  );
+
+    const sql = `
+      UPDATE menus SET 
+      food_name = ?, description = ?, price = ?, 
+      social_media_link = ?, category_id = ?
+      WHERE id = ? AND owner_id = ?
+    `;
+    const result = await query(sql, [
+      food_name, description, price, social_media_link, category_id, id, userId
+    ]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Menu item not found or not owned by user' });
+    }
+    res.json({ message: 'Menu item updated successfully' });
+  } catch (err) {
+    console.error('Error updating menu item:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
 };
 
 // Delete Menu Item
-exports.deleteMenuItem = (req, res) => {
-  const { id } = req.params;
-  const userId = req.user.id;
+exports.deleteMenuItem = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
 
-  const query = 'DELETE FROM menus WHERE id = ? AND owner_id = ?';
-  connection.query(query, [id, userId], (err, results) => {
-    if (err) {
-      return res.status(400).json({ message: 'Error deleting menu item', error: err });
-    }
+    const sql = 'DELETE FROM menus WHERE id = ? AND owner_id = ?';
+    await query(sql, [id, userId]);
+
     res.json({ message: 'Menu item deleted successfully' });
-  });
+  } catch (err) {
+    console.error('Error deleting menu item:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
 };
 
-// Get Menu Items for the Logged-in Owner
-exports.getMenuItems = (req, res) => {
-  const query = `SELECT 
-    id,
-    owner_id,
-    food_name ,  
-    description,
-    price,
-    image_url as image,
-    social_media_link ,
-    category_id
-   FROM menus 
-   WHERE owner_id = ?`;
-  connection.query(query, [req.user.id], (err, results) => {
-    if (err) {
-      console.error('Database error:', err);
-      return res.status(500).json({ message: 'Failed to fetch menu' });
-    }
-    
-    // Transform NULL values to empty strings for frontend safety
+// Get Menu Items for Logged-in Owner
+exports.getMenuItems = async (req, res) => {
+  try {
+    const sql = `
+      SELECT id, owner_id, food_name, description, price, image_url as image, 
+             social_media_link, category_id
+      FROM menus WHERE owner_id = ?
+    `;
+    const results = await query(sql, [req.user.id]);
+
     const sanitizedItems = results.map(item => ({
       id: item.id,
       food_name: item.food_name || '',
@@ -124,73 +101,58 @@ exports.getMenuItems = (req, res) => {
       social_media_link: item.social_media_link || '',
       category_id: item.category_id || null
     }));
-    
+
     res.json(sanitizedItems);
-  });
+  } catch (err) {
+    console.error('Error fetching menu:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
 };
 
-exports.getPublicMenuItems = (req, res) => {
-  const ownerId = req.params.ownerId;
-  const sql = 'SELECT * FROM menus WHERE owner_id = ?';
-
-  connection.query(sql, [ownerId], (err, results) => {
-    if (err) {
-      return res.status(500).json({ message: 'Database error' });
-    }
+// Public Menu Items
+exports.getPublicMenuItems = async (req, res) => {
+  try {
+    const ownerId = req.params.ownerId;
+    const sql = 'SELECT * FROM menus WHERE owner_id = ?';
+    const results = await query(sql, [ownerId]);
 
     res.status(200).json(results);
-  });
+  } catch (err) {
+    console.error('Error fetching public menu:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
 };
 
+// Search Food Items by Type
+exports.getFoodItemsByType = async (req, res) => {
+  try {
+    const type = req.query.type ? req.query.type.trim().toLowerCase() : '';
+    const minPrice = req.query.minPrice ? parseFloat(req.query.minPrice) : null;
+    const maxPrice = req.query.maxPrice ? parseFloat(req.query.maxPrice) : null;
 
-// Secure and Optimized: Get Food Items by Type
-exports.getFoodItemsByType = (req, res) => {
-  const type = req.query.type ? req.query.type.trim().toLowerCase() : '';
-  const minPrice = req.query.minPrice ? parseFloat(req.query.minPrice) : null;
-  const maxPrice = req.query.maxPrice ? parseFloat(req.query.maxPrice) : null;
-
-  // console.log("Search Type:", type);
-  // console.log("Price Range:", minPrice, "-", maxPrice);
-
-  // Base SQL Query with Partial Matching
-  let sql = `
-      SELECT 
-          m.id, 
-          m.food_name, 
-          m.description, 
-          m.price, 
-          m.image_url, 
-          m.social_media_link AS owner_instagram,
-          u.username AS owner_name,
-          u.logo AS owner_logo,
-          u.id AS owner_id
+    let sql = `
+      SELECT m.id, m.food_name, m.description, m.price, m.image_url, 
+             m.social_media_link AS owner_instagram, 
+             u.username AS owner_name, u.logo AS owner_logo, u.id AS owner_id
       FROM menus m
       JOIN users u ON m.owner_id = u.id
-      WHERE LOWER(m.food_name) LIKE ?`;
+      WHERE LOWER(m.food_name) LIKE ?
+    `;
 
-  // Adding Price Filtering Conditionally
-  const params = [`%${type}%`]; // Partial matching with LIKE
-  if (minPrice !== null) {
+    const params = [`%${type}%`];
+    if (minPrice !== null) {
       sql += " AND m.price >= ?";
       params.push(minPrice);
-  }
-  if (maxPrice !== null) {
+    }
+    if (maxPrice !== null) {
       sql += " AND m.price <= ?";
       params.push(maxPrice);
+    }
+
+    const results = await query(sql, params);
+    res.status(200).json(results);
+  } catch (err) {
+    console.error('Error searching food items:', err);
+    res.status(500).json({ message: 'Server error' });
   }
-
-  // Debugging the final query
-  // console.log("Final Query:", sql);
-  // console.log("Query Parameters:", params);
-
-  connection.query(sql, params, (err, results) => {
-      if (err) {
-          console.error('Database error:', err);
-          return res.status(500).json({ message: 'Database error' });
-      }
-
-      // console.log("Results:", results);
-      res.status(200).json(results);
-  });
 };
-
