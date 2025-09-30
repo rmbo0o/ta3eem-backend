@@ -1,49 +1,61 @@
-const { query } = require('../config/db');
+const pool = require('../config/db');
 
-// Add a review
+// Add a new review
 exports.addReview = async (req, res) => {
-  try {
-    const { owner_id, reviewer_name, comment, rating } = req.body;
-    const sql = 'INSERT INTO reviews (owner_id, reviewer_name, comment, rating) VALUES (?, ?, ?, ?)';
-    await query(sql, [owner_id, reviewer_name, comment, rating]);
+  const { owner_id, reviewer_name, review_text, rating } = req.body;
 
-    res.json({ message: 'Review added successfully' });
+  if (!owner_id || !review_text) {
+    return res.status(400).json({ message: 'Owner ID and review text are required' });
+  }
+
+  try {
+    const [result] = await pool.query(
+      'INSERT INTO reviews (owner_id, reviewer_name, review_text, rating) VALUES (?, ?, ?, ?)',
+      [owner_id, reviewer_name || 'Anonymous', review_text, rating || null]
+    );
+
+    res.status(201).json({ id: result.insertId, owner_id, reviewer_name, review_text, rating });
   } catch (err) {
     console.error('Error adding review:', err);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Database error' });
   }
 };
 
 // Get all reviews for an owner
 exports.getReviews = async (req, res) => {
-  try {
-    const ownerId = req.params.ownerId;
-    const sql = 'SELECT * FROM reviews WHERE owner_id = ? ORDER BY created_at DESC';
-    const results = await query(sql, [ownerId]);
+  const { ownerId } = req.params;
 
-    res.json(results);
+  try {
+    const [rows] = await pool.query(
+      'SELECT * FROM reviews WHERE owner_id = ? ORDER BY created_at DESC',
+      [ownerId]
+    );
+
+    res.json(rows);
   } catch (err) {
     console.error('Error fetching reviews:', err);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Database error' });
   }
 };
 
-// Add response to a review
+// Add a response from the owner
 exports.addResponse = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { response } = req.body;
+  const { id } = req.params;
+  const { response_text } = req.body;
 
-    const sql = 'UPDATE reviews SET response = ? WHERE id = ? AND owner_id = ?';
-    const result = await query(sql, [response, id, req.user.id]);
+  try {
+    const [result] = await pool.query(
+      'UPDATE reviews SET response_text = ? WHERE id = ?',
+      [response_text, id]
+    );
 
     if (result.affectedRows === 0) {
-      return res.status(404).json({ message: 'Review not found or not authorized' });
+      return res.status(404).json({ message: 'Review not found' });
     }
 
-    res.status(200).json({ message: 'Response added successfully' });
+    res.json({ message: 'Response added successfully' });
   } catch (err) {
     console.error('Error adding response:', err);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Database error' });
   }
 };

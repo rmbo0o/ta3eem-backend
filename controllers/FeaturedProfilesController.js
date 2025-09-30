@@ -1,45 +1,29 @@
-const { query } = require('../config/db');
+const pool = require('../config/db');
 
-const getFeaturedProfiles = async (req, res) => {
+// Get featured profiles
+exports.getFeaturedProfiles = async (req, res) => {
   try {
-    const sql = `
-      SELECT u.id, u.username, u.logo, 
-             AVG(r.rating) AS average_rating, 
-             COUNT(r.id) AS total_reviews 
-      FROM users u 
-      LEFT JOIN reviews r ON u.id = r.owner_id 
-      GROUP BY u.id 
-      ORDER BY average_rating DESC, total_reviews DESC 
-      LIMIT 5;
-    `;
-    const results = await query(sql);
-    res.status(200).json(results);
+    const [rows] = await pool.query(
+      'SELECT id, username, bio, logo FROM users WHERE featured = 1 LIMIT 10'
+    );
+
+    res.json(rows);
   } catch (err) {
-    console.error("Error fetching featured profiles:", err);
-    res.status(500).json({ error: "Failed to fetch featured profiles" });
+    console.error('Error fetching featured profiles:', err);
+    res.status(500).json({ message: 'Database error' });
   }
 };
 
-// Get All Owners with Search and Pagination
-const getAllOwners = async (req, res) => {
+// Get all owners
+exports.getAllOwners = async (req, res) => {
   try {
-    const { search = "", page = 1, limit = 6 } = req.query;
-    const offset = (page - 1) * limit;
-    const searchQuery = `%${search}%`;
+    const [rows] = await pool.query(
+      'SELECT id, username, bio, logo FROM users'
+    );
 
-    const sql = `
-      SELECT id, username, logo 
-      FROM users 
-      WHERE username LIKE ? 
-      LIMIT ? OFFSET ?;
-    `;
-    const results = await query(sql, [searchQuery, parseInt(limit), parseInt(offset)]);
-
-    res.status(200).json(results);
+    res.json(rows);
   } catch (err) {
-    console.error("Error fetching owners:", err);
-    res.status(500).json({ error: "Failed to fetch owners" });
+    console.error('Error fetching owners:', err);
+    res.status(500).json({ message: 'Database error' });
   }
 };
-
-module.exports = { getFeaturedProfiles, getAllOwners };

@@ -1,26 +1,22 @@
-const { query } = require('../config/db');
+const pool = require('../config/db');
 
-exports.getProfile = async (req, res) => {
+// Get owner by ID
+exports.getOwnerById = async (req, res) => {
+  const { id } = req.params;
+
   try {
-    const sql = 'SELECT id, username, email, bio, logo FROM users WHERE id = ?';
-    const results = await query(sql, [req.user.id]);
+    const [rows] = await pool.query(
+      'SELECT id, username, bio, logo FROM users WHERE id = ?',
+      [id]
+    );
 
-    res.json(results[0]);
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'Owner not found' });
+    }
+
+    res.json(rows[0]);
   } catch (err) {
-    console.error('Error fetching profile:', err);
-    res.status(500).json({ message: 'Server error' });
-  }
-};
-
-exports.updateProfile = async (req, res) => {
-  try {
-    const { bio } = req.body;
-    const sql = 'UPDATE users SET bio = ? WHERE id = ?';
-    await query(sql, [bio, req.user.id]);
-
-    res.json({ message: 'Profile updated' });
-  } catch (err) {
-    console.error('Error updating profile:', err);
+    console.error('Error fetching owner:', err);
     res.status(500).json({ message: 'Server error' });
   }
 };
