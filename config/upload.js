@@ -1,29 +1,58 @@
-// config/upload.js
+// upload.js
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, '../uploads/logos'));
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
+const UPLOAD_DIR =
+  process.env.UPLOAD_DIR || path.join(__dirname, '../uploads');
 
-const upload = multer({ 
-  storage,
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) {
-      cb(null, true);
-    } else {
-      cb(new Error('Only image files are allowed!'), false);
-    }
-  },
-  limits: {
-    fileSize: 5 * 1024 * 1024 // 5MB
-  }
-});
+function ensureDir(p) {
+  fs.mkdirSync(p, { recursive: true });
+}
 
-module.exports = upload;
+function makeStorage(subfolder = 'menus') {
+  const dest = path.join(UPLOAD_DIR, subfolder);
+  ensureDir(dest);
+
+  return multer.diskStorage({
+    destination: (_req, _file, cb) => cb(null, dest),
+    filename: (_req, file, cb) => {
+      const ext = path.extname(file.originalname || '');
+      const unique = Date.now() + '-' + Math.round(Math.random() * 1e9);
+      cb(null, `${unique}${ext || '.jpg'}`);
+    },
+  });
+}
+
+function fileFilter(_req, file, cb) {
+  const ok =
+    /image\/(jpeg|png|webp|gif|bmp)/i.test(file.mimetype) ||
+    /\.(jpg|jpeg|png|webp|gif|bmp)$/i.test(file.originalname || '');
+  if (ok) return cb(null, true);
+  cb(new Error('Only image files are allowed'));
+}
+
+/**
+ * Factory: create an uploader for a specific subfolder.
+ * Example: router.post('/menus/upload', uploadMenus.single('image'), handler)
+ */
+function makeUploader(subfolder = 'menus') {
+  return multer({
+    storage: makeStorage(subfolder),
+    fileFilter,
+    limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
+  });
+}
+
+// Ready-made uploaders
+const uploadMenus = makeUploader('menus');
+const uploadProfiles = makeUploader('profiles');
+const uploadLogos = makeUploader('logos');
+
+module.exports = {
+  UPLOAD_DIR,
+  makeUploader,
+  uploadMenus,
+  uploadProfiles,
+  uploadLogos,
+};

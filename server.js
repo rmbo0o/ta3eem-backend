@@ -39,7 +39,21 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Serve uploads
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+const UPLOAD_DIR =
+  process.env.UPLOAD_DIR || path.join(__dirname, 'uploads');
+
+// Ensure the directories exist at boot
+const subfolders = ['menus', 'profiles', 'logos'];
+fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+for (const sub of subfolders) {
+  fs.mkdirSync(path.join(UPLOAD_DIR, sub), { recursive: true });
+}
+
+// Serve static files for both legacy and API-prefixed URLs
+app.use('/uploads', express.static(UPLOAD_DIR));
+app.use('/api/uploads', express.static(UPLOAD_DIR));
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -48,6 +62,17 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api', ownerRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use(FeaturedProfilesRoutes);
+
+
+app.get('/healthz', (_req, res) => res.status(200).send('OK'));
+
+// 404 handler (for non-static API routes)
+app.use((req, res, next) => {
+  if (req.path.startsWith('/api') && !req.path.startsWith('/api/uploads')) {
+    return res.status(404).json({ message: 'Not found' });
+  }
+  next();
+});
 
 // Error handler
 app.use((err, req, res, next) => {
@@ -58,4 +83,5 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`Serving uploads from: ${UPLOAD_DIR}`);
 });
