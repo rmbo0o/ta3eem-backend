@@ -3,8 +3,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
-const UPLOAD_DIR =
-  process.env.UPLOAD_DIR || path.join(__dirname, '../uploads');
+const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(__dirname, '../uploads');
 
 function ensureDir(p) {
   fs.mkdirSync(p, { recursive: true });
@@ -32,10 +31,6 @@ function fileFilter(_req, file, cb) {
   cb(new Error('Only image files are allowed'));
 }
 
-/**
- * Factory: create an uploader for a specific subfolder.
- * Example: router.post('/menus/upload', uploadMenus.single('image'), handler)
- */
 function makeUploader(subfolder = 'menus') {
   return multer({
     storage: makeStorage(subfolder),
@@ -44,7 +39,6 @@ function makeUploader(subfolder = 'menus') {
   });
 }
 
-// Ready-made uploaders
 const uploadMenus = makeUploader('menus');
 const uploadProfiles = makeUploader('profiles');
 const uploadLogos = makeUploader('logos');

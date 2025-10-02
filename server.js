@@ -14,49 +14,40 @@ dotenv.config();
 
 const app = express();
 
-// Ensure upload directories exist
-const uploadDirs = [
-  path.join(__dirname, 'uploads'),
-  path.join(__dirname, 'uploads/menus'),
-  path.join(__dirname, 'uploads/profiles')
-];
+// trust proxy so req.protocol is https on Render
+app.set('trust proxy', 1);
 
-uploadDirs.forEach(dir => {
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
-});
-
-// CORS config
-app.use(cors({
-  origin: 'https://ta3eem-frontendnew.onrender.com',
-  credentials: true,
-  exposedHeaders: ['Authorization'],
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']
-}));
+// CORS (kept as you had it)
+app.use(
+  cors({
+    origin: 'https://ta3eem-frontendnew.onrender.com',
+    credentials: true,
+    exposedHeaders: ['Authorization'],
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+  })
+);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.set('trust proxy', 1);
 
-// Serve uploads
-// app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+/**
+ * Upload directory:
+ * - If you attach a Render Persistent Disk, set UPLOAD_DIR=/data/uploads
+ * - Otherwise falls back to ./uploads (ephemeral)
+ */
+const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(__dirname, 'uploads');
 
-const UPLOAD_DIR =
-  process.env.UPLOAD_DIR || path.join(__dirname, 'uploads');
+// Ensure upload subfolders exist
+['', 'menus', 'profiles', 'logos'].forEach((sub) => {
+  const dir = path.join(UPLOAD_DIR, sub);
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+});
 
-// Ensure the directories exist at boot
-const subfolders = ['menus', 'profiles', 'logos'];
-fs.mkdirSync(UPLOAD_DIR, { recursive: true });
-for (const sub of subfolders) {
-  fs.mkdirSync(path.join(UPLOAD_DIR, sub), { recursive: true });
-}
-
-// Serve static files for both legacy and API-prefixed URLs
+// Serve uploads on both legacy and /api paths
 app.use('/uploads', express.static(UPLOAD_DIR));
 app.use('/api/uploads', express.static(UPLOAD_DIR));
 
-// Routes
+// Routes (unchanged)
 app.use('/api/auth', authRoutes);
 app.use('/api/menu', menuRoutes);
 app.use('/api/reviews', reviewRoutes);
@@ -64,10 +55,10 @@ app.use('/api', ownerRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use(FeaturedProfilesRoutes);
 
-
+// Health
 app.get('/healthz', (_req, res) => res.status(200).send('OK'));
 
-// 404 handler (for non-static API routes)
+// 404 for unknown API routes (not static)
 app.use((req, res, next) => {
   if (req.path.startsWith('/api') && !req.path.startsWith('/api/uploads')) {
     return res.status(404).json({ message: 'Not found' });
@@ -76,11 +67,12 @@ app.use((req, res, next) => {
 });
 
 // Error handler
-app.use((err, req, res, next) => {
-  console.error(err.stack);
+app.use((err, _req, res, _next) => {
+  console.error(err.stack || err);
   res.status(500).json({ message: 'Internal Server Error' });
 });
 
+// Start
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server running on port ${PORT}`);
