@@ -78,3 +78,6 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`Serving uploads from: ${UPLOAD_DIR}`);
 });
+
+
+app.config.devtools = true;
