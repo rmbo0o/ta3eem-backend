@@ -80,4 +80,3 @@ app.listen(PORT, '0.0.0.0', () => {
 });
 
 
-app.config.devtools = true;
