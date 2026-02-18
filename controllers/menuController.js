@@ -31,9 +31,12 @@ exports.getPublicMenuItems = async (req, res) => {
 };
 
 // Add new menu item
+// Add new menu item
 exports.addMenuItem = async (req, res) => {
   const { food_name, description, price, social_media_link, category_id } = req.body;
-  const image_url = req.file ? `/uploads/menus/${req.file.filename}` : '';
+  
+  // Cloudinary returns the secure URL in req.file.path
+  const image_url = req.file ? req.file.path : ''; // This will be the full Cloudinary URL
 
   try {
     const [result] = await pool.query(
@@ -47,7 +50,7 @@ exports.addMenuItem = async (req, res) => {
       food_name,
       description,
       price,
-      image_url,
+      image_url, // Now this is a full Cloudinary URL
       social_media_link,
       category_id
     });

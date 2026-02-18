@@ -4,6 +4,7 @@ const multer = require('multer');
 const path = require('path');
 const menuController = require('../controllers/menuController');
 const authMiddleware = require('../middleware/authMiddleware');
+const { storage } = require('../config/cloudinary');
 
 // Configure Multer storage
 const storage = multer.diskStorage({
