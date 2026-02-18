@@ -6,16 +6,7 @@ const menuController = require('../controllers/menuController');
 const authMiddleware = require('../middleware/authMiddleware');
 const { storage } = require('../config/cloudinary');
 
-// Configure Multer storage
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, '../uploads/menus'));
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
-  },
-});
+
 const upload = multer({ storage });
 
 // Routes
