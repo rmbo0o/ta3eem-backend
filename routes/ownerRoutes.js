@@ -14,6 +14,7 @@ router.get('/owners/:id', async (req, res) => {
       return res.status(404).json({ message: 'Owner not found' });
     }
 
+    // Cloudinary URLs are already full URLs
     res.json(results[0]);
   } catch (err) {
     console.error('Error fetching owner:', err);

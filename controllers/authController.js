@@ -100,13 +100,17 @@ exports.login = async (req, res) => {
 
 // Update Profile (bio, logo)
 exports.updateProfile = async (req, res) => {
-  const bio = req.body.bio; // fixed: req.body is object
-  const logo = req.file ? `/uploads/profiles/${req.file.filename}` : null;
+  const bio = req.body.bio;
+  // If using Cloudinary, the URL is in req.file.path
+  const logo = req.file ? req.file.path : null;
   const userId = req.user.id;
 
   try {
     await pool.query('UPDATE users SET bio = ?, logo = ? WHERE id = ?', [bio, logo, userId]);
-    res.json({ message: 'Profile updated successfully' });
+    res.json({ 
+      message: 'Profile updated successfully',
+      logo: logo 
+    });
   } catch (err) {
     console.error('Profile update error:', err);
     res.status(500).json({ message: 'Error updating profile' });
@@ -127,6 +131,7 @@ exports.getProfile = async (req, res) => {
       return res.status(404).json({ message: 'Profile not found' });
     }
 
+    // The logo is already a Cloudinary URL, return as is
     res.json(results[0]);
   } catch (err) {
     console.error('Profile fetch error:', err);

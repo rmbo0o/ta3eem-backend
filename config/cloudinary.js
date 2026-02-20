@@ -25,4 +25,21 @@ const storage = new CloudinaryStorage({
   }
 });
 
-module.exports = { cloudinary, storage };
+// Storage for profile images
+const profileStorage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: async (req, file) => {
+    const ownerId = req.user.id;
+    return {
+      folder: `ta3eem/owners/${ownerId}/profile`,
+      allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
+      public_id: 'profile', // Fixed name so it overwrites
+      transformation: [
+        { width: 300, height: 300, crop: 'limit' }
+      ]
+    };
+  }
+});
+
+
+module.exports = { cloudinary, storage , profileStorage};
