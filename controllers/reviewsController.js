@@ -1,17 +1,16 @@
 const pool = require('../config/db');
 
 // Add a new review
-// Add a new review
 exports.addReview = async (req, res) => {
-  const { owner_id, reviewer_name, comment, rating } = req.body; // Changed from review_text to comment
+  const { owner_id, reviewer_name, comment, rating } = req.body;
 
-  if (!owner_id || !comment) { // Changed from review_text to comment
+  if (!owner_id || !comment) {
     return res.status(400).json({ message: 'Owner ID and review text are required' });
   }
 
   try {
     const [result] = await pool.query(
-      'INSERT INTO reviews (owner_id, reviewer_name, comment, rating) VALUES (?, ?, ?, ?)', // Changed from review_text to comment
+      'INSERT INTO reviews (owner_id, reviewer_name, comment, rating) VALUES (?, ?, ?, ?)',
       [owner_id, reviewer_name || 'Anonymous', comment, rating || null]
     );
 
@@ -19,7 +18,7 @@ exports.addReview = async (req, res) => {
       id: result.insertId, 
       owner_id, 
       reviewer_name, 
-      comment, // Changed from review_text to comment
+      comment, 
       rating 
     });
   } catch (err) {
@@ -29,13 +28,12 @@ exports.addReview = async (req, res) => {
 };
 
 // Get all reviews for an owner
-// Get all reviews for an owner
 exports.getReviews = async (req, res) => {
   const { ownerId } = req.params;
 
   try {
     const [rows] = await pool.query(
-      'SELECT id, owner_id, reviewer_name, comment, rating, created_at FROM reviews WHERE owner_id = ? ORDER BY created_at DESC', // Changed from review_text to comment
+      'SELECT id, owner_id, reviewer_name, comment, rating, created_at, response_text FROM reviews WHERE owner_id = ? ORDER BY created_at DESC',
       [ownerId]
     );
 
@@ -49,11 +47,11 @@ exports.getReviews = async (req, res) => {
 // Add a response from the owner
 exports.addResponse = async (req, res) => {
   const { id } = req.params;
-  const { response_text } = req.body; // Make sure this column exists in your table
+  const { response_text } = req.body;
 
   try {
     const [result] = await pool.query(
-      'UPDATE reviews SET response_text = ? WHERE id = ?', // Check if column name is correct
+      'UPDATE reviews SET response_text = ? WHERE id = ?',
       [response_text, id]
     );
 
