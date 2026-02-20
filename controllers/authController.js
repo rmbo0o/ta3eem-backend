@@ -118,12 +118,13 @@ exports.updateProfile = async (req, res) => {
 };
 
 // Get Owner Profile Data
+
 exports.getProfile = async (req, res) => {
   const userId = req.user.id;
 
   try {
     const [results] = await pool.query(
-      'SELECT username, email, bio, logo FROM users WHERE id = ?',
+      'SELECT id, username, email, bio, logo FROM users WHERE id = ?', // ✅ Added id
       [userId]
     );
 
@@ -131,7 +132,6 @@ exports.getProfile = async (req, res) => {
       return res.status(404).json({ message: 'Profile not found' });
     }
 
-    // The logo is already a Cloudinary URL, return as is
     res.json(results[0]);
   } catch (err) {
     console.error('Profile fetch error:', err);
