@@ -106,22 +106,40 @@ exports.deleteMenuItem = async (req, res) => {
 };
 
 // Get food items by type (categories)
+// Get food items by type/category with search and price filters
 exports.getFoodItemsByType = async (req, res) => {
-  const { category_id } = req.query;
-
   try {
+    const { type, minPrice, maxPrice } = req.query;
+    
     let sql = `
-      SELECT m.*, c.name AS category_name 
+      SELECT m.*, u.username as owner_name 
       FROM menus m 
-      LEFT JOIN categories c ON m.category_id = c.id
+      LEFT JOIN users u ON m.owner_id = u.id
+      WHERE 1=1
     `;
-    const params = [];
-
-    if (category_id) {
-      sql += ' WHERE m.category_id = ?';
-      params.push(category_id);
+    let params = [];
+    
+    // Search by food name (type parameter)
+    if (type && type.trim() !== '') {
+      sql += ' AND m.food_name LIKE ?';
+      params.push(`%${type.trim()}%`);
     }
-
+    
+    // Filter by minimum price
+    if (minPrice && minPrice !== 'null' && minPrice !== '') {
+      sql += ' AND m.price >= ?';
+      params.push(parseFloat(minPrice));
+    }
+    
+    // Filter by maximum price
+    if (maxPrice && maxPrice !== 'null' && maxPrice !== '') {
+      sql += ' AND m.price <= ?';
+      params.push(parseFloat(maxPrice));
+    }
+    
+    console.log('Executing SQL:', sql);
+    console.log('With params:', params);
+    
     const [rows] = await pool.query(sql, params);
     res.json(rows);
   } catch (err) {
