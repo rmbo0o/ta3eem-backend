@@ -109,15 +109,28 @@ exports.deleteMenuItem = async (req, res) => {
 // Get food items by type/category with search and price filters
 exports.getFoodItemsByType = async (req, res) => {
   try {
-    const { type, minPrice, maxPrice } = req.query;
+    const { type, minPrice, maxPrice, category_id, category_name } = req.query;
     
     let sql = `
-      SELECT m.*, u.username as owner_name 
+      SELECT m.*, c.name AS category_name, u.username as owner_name 
       FROM menus m 
+      LEFT JOIN categories c ON m.category_id = c.id
       LEFT JOIN users u ON m.owner_id = u.id
       WHERE 1=1
     `;
     let params = [];
+    
+    // Filter by category ID (if provided)
+    if (category_id) {
+      sql += ' AND m.category_id = ?';
+      params.push(category_id);
+    }
+    
+    // Filter by category name (if provided)
+    if (category_name) {
+      sql += ' AND c.name = ?';
+      params.push(category_name);
+    }
     
     // Search by food name (type parameter)
     if (type && type.trim() !== '') {
