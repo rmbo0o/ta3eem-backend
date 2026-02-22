@@ -100,13 +100,23 @@ exports.login = async (req, res) => {
 
 // Update Profile (bio, logo)
 exports.updateProfile = async (req, res) => {
-  const bio = req.body.bio;
-  // If using Cloudinary, the URL is in req.file.path
+  const { bio, instagram } = req.body; // Added instagram
   const logo = req.file ? req.file.path : null;
   const userId = req.user.id;
 
   try {
-    await pool.query('UPDATE users SET bio = ?, logo = ? WHERE id = ?', [bio, logo, userId]);
+    let query = 'UPDATE users SET bio = ?, instagram = ?'; // Added instagram
+    let params = [bio, instagram];
+    
+    if (logo) {
+      query += ', logo = ?';
+      params.push(logo);
+    }
+    
+    query += ' WHERE id = ?';
+    params.push(userId);
+
+    await pool.query(query, params);
     res.json({ 
       message: 'Profile updated successfully',
       logo: logo 
@@ -124,7 +134,7 @@ exports.getProfile = async (req, res) => {
 
   try {
     const [results] = await pool.query(
-      'SELECT id, username, email, bio, logo FROM users WHERE id = ?', // ✅ Added id
+      'SELECT id, username, email, bio, logo, instagram FROM users WHERE id = ?', // Added instagram
       [userId]
     );
 

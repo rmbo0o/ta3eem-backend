@@ -1,12 +1,13 @@
 const pool = require('../config/db');
 
 // Get owner by ID
+// Get owner by ID
 exports.getOwnerById = async (req, res) => {
   const { id } = req.params;
 
   try {
     const [rows] = await pool.query(
-      'SELECT id, username, bio, logo FROM users WHERE id = ?',
+      'SELECT id, username, bio, logo, instagram FROM users WHERE id = ?', // Added instagram
       [id]
     );
 
