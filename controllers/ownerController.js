@@ -1,13 +1,14 @@
 const pool = require('../config/db');
 
 // Get owner by ID
-// Get owner by ID
 exports.getOwnerById = async (req, res) => {
   const { id } = req.params;
 
   try {
+    console.log('Fetching owner with ID:', id); // Debug log
+    
     const [rows] = await pool.query(
-      'SELECT id, username, bio, logo, instagram FROM users WHERE id = ?', // Added instagram
+      'SELECT id, username, bio, logo, instagram FROM users WHERE id = ?',
       [id]
     );
 
@@ -15,6 +16,7 @@ exports.getOwnerById = async (req, res) => {
       return res.status(404).json({ message: 'Owner not found' });
     }
 
+    console.log('Owner found:', rows[0]); // Debug log
     res.json(rows[0]);
   } catch (err) {
     console.error('Error fetching owner:', err);
