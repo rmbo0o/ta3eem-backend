@@ -42,6 +42,8 @@ function makeUploader(subfolder = 'menus') {
 const uploadMenus = makeUploader('menus');
 const uploadProfiles = makeUploader('profiles');
 const uploadLogos = makeUploader('logos');
+const uploadProducts = makeUploader('products');
+const uploadBanners = makeUploader('banners');
 
 module.exports = {
   UPLOAD_DIR,
@@ -49,4 +51,6 @@ module.exports = {
   uploadMenus,
   uploadProfiles,
   uploadLogos,
+  uploadProducts,
+  uploadBanners,
 };

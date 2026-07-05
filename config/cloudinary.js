@@ -14,7 +14,7 @@ const storage = new CloudinaryStorage({
     const ownerId = req.user.id;
     
     return {
-      folder: `ta3eem/owners/${ownerId}/menus`,
+      folder: `souqy/stores/${ownerId}/products`,
       allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
       public_id: `${Date.now()}-${file.originalname.split('.')[0]}`,
       transformation: [
@@ -31,7 +31,7 @@ const profileStorage = new CloudinaryStorage({
   params: async (req, file) => {
     const ownerId = req.user.id;
     return {
-      folder: `ta3eem/owners/${ownerId}/profile`,
+      folder: `souqy/stores/${ownerId}/profile`,
       allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
       public_id: 'profile', // Fixed name so it overwrites
       transformation: [

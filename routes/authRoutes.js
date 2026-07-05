@@ -37,9 +37,8 @@ router.put('/profile', authMiddleware, upload.single('logo'), async (req, res) =
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Fetch the updated profile to return
     const [updatedProfile] = await pool.query(
-      'SELECT id, username, email, bio, logo, instagram FROM users WHERE id = ?',
+      'SELECT id, username, store_name, email, bio, logo, instagram FROM users WHERE id = ?',
       [userId]
     );
 

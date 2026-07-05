@@ -1,15 +1,15 @@
 {
-  "name": "foodie-backend",
-  "version": "1.0.0",
-  "main": "jwtUtils.js",
+  "name": "souqy-backend",
+  "version": "2.0.0",
+  "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "start": "node server.js",
+    "migrate": "node migration.js"
   },
-  "keywords": [],
+  "keywords": ["marketplace", "ecommerce", "salla", "stores"],
   "author": "",
   "license": "ISC",
-  "description": "",
+  "description": "سوقي - General marketplace platform like Salla",
   "dependencies": {
     "bcryptjs": "^3.0.2",
     "busboy": "^1.6.0",

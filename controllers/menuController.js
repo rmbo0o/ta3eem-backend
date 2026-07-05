@@ -112,7 +112,7 @@ exports.getFoodItemsByType = async (req, res) => {
     const { type, minPrice, maxPrice, category_id, category_name } = req.query;
     
     let sql = `
-      SELECT m.*, c.name AS category_name, u.username as owner_name 
+      SELECT m.*, c.name AS category_name, u.username as owner_name, u.store_name
       FROM menus m 
       LEFT JOIN categories c ON m.category_id = c.id
       LEFT JOIN users u ON m.owner_id = u.id

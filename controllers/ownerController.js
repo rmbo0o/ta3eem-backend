@@ -9,7 +9,7 @@ exports.getOwnerById = async (req, res) => {
     
     // ✅ Make sure 'instagram' is included in the SELECT
     const [rows] = await pool.query(
-      'SELECT id, username, bio, logo, instagram FROM users WHERE id = ?',
+      'SELECT id, username, store_name, bio, logo, instagram FROM users WHERE id = ?',
       [id]
     );
 

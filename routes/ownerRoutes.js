@@ -6,7 +6,7 @@ router.get('/owners/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const [results] = await pool.query(
-      'SELECT id, username, bio, logo FROM users WHERE id = ?',
+      'SELECT id, username, store_name, bio, logo FROM users WHERE id = ?',
       [id]
     );
 

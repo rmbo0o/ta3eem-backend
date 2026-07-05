@@ -16,9 +16,9 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// Register User (Owner)
+// Register User (Store Owner)
 exports.register = async (req, res) => {
-  const { username, email, password } = req.body;
+  const { username, email, password, store_name } = req.body;
 
   if (!username || !email || !password) {
     return res.status(400).json({ message: 'All fields are required' });
@@ -34,20 +34,20 @@ exports.register = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const [result] = await pool.query(
-      'INSERT INTO users (username, email, password) VALUES (?, ?, ?)',
-      [username, email, hashedPassword]
+      'INSERT INTO users (username, email, password, store_name) VALUES (?, ?, ?, ?)',
+      [username, email, hashedPassword, store_name || username]
     );
 
     const token = jwt.sign(
-      { id: result.insertId, username },
+      { id: result.insertId, username, store_name: store_name || username },
       process.env.JWT_SECRET,
-      { expiresIn: '1h' }
+      { expiresIn: '7d' }
     );
 
     res.json({
-      message: 'User registered successfully',
+      message: 'Store registered successfully',
       token,
-      user: { id: result.insertId, username, email }
+      user: { id: result.insertId, username, email, store_name: store_name || username }
     });
   } catch (err) {
     console.error('Registration error:', err);
@@ -78,15 +78,15 @@ exports.login = async (req, res) => {
     }
 
     const token = jwt.sign(
-      { id: user.id, username: user.username },
+      { id: user.id, username: user.username, store_name: user.store_name },
       process.env.JWT_SECRET,
-      { expiresIn: '1h' }
+      { expiresIn: '7d' }
     );
 
     res.json({
       message: 'Login successful',
       token,
-      user: { id: user.id, username: user.username, email: user.email }
+      user: { id: user.id, username: user.username, email: user.email, store_name: user.store_name }
     });
   } catch (err) {
     console.error('Login error:', err);
@@ -153,7 +153,7 @@ exports.updateProfile = async (req, res) => {
 
     // Fetch the updated profile
     const [updatedProfile] = await pool.query(
-      'SELECT id, username, email, bio, logo, instagram FROM users WHERE id = ?',
+      'SELECT id, username, store_name, email, bio, logo, instagram FROM users WHERE id = ?',
       [userId]
     );
 
@@ -176,7 +176,7 @@ exports.getProfile = async (req, res) => {
 
   try {
     const [results] = await pool.query(
-      'SELECT id, username, email, bio, logo, instagram FROM users WHERE id = ?',
+      'SELECT id, username, store_name, email, bio, logo, instagram, phone, whatsapp, city, store_type FROM users WHERE id = ?',
       [userId]
     );
 
@@ -184,7 +184,7 @@ exports.getProfile = async (req, res) => {
       return res.status(404).json({ message: 'Profile not found' });
     }
 
-    console.log('Profile fetched:', results[0]); // Debug log
+    console.log('Profile fetched:', results[0]);
     res.json(results[0]);
   } catch (err) {
     console.error('Profile fetch error:', err);

@@ -4,7 +4,7 @@ const pool = require('../config/db');
 exports.getFeaturedProfiles = async (req, res) => {
   try {
     const [rows] = await pool.query(
-      'SELECT id, username, bio, logo FROM users WHERE featured = 1 LIMIT 10'
+      'SELECT id, username, store_name, bio, logo FROM users WHERE featured = 1 LIMIT 10'
     );
     res.json(rows);
   } catch (err) {
@@ -19,7 +19,7 @@ exports.getAllOwners = async (req, res) => {
   try {
     const { search = '' } = req.query;
     
-    let query = 'SELECT id, username, bio, logo, instagram FROM users'; // ✅ Added instagram
+    let query = 'SELECT id, username, store_name, bio, logo, instagram, city FROM users';
     let params = [];
     
     if (search && search.trim() !== '') {
