@@ -48,6 +48,7 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api', ownerRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/stores', storeRoutes);
+app.use('/api/seed', require('./routes/seedRoutes'));
 app.use(FeaturedProfilesRoutes);
 
 // Health
